@@ -1,0 +1,30 @@
+{
+  "js": {
+  },
+  "browserify": {
+    "dist/browserified.js":"../index.js"
+  },
+  "exclude": {
+    "jshint": [
+      "browserified.js"
+    ]
+  },
+  "dependencies": {
+    "js": [
+      "allex:environment:lib",
+      "allex:app:lib",
+      "allex:templateslite:lib",
+      "allex:htmltemplates:lib",
+      "allex:jqueryelements:lib",
+      "allex:imagemodifier:webcomponent",
+      "allex:angular1upload:webcomponent",
+      "allex:geolocation:webcomponent"
+    ],
+    "css": [
+    ]
+  },
+  "protoboard": {
+    "role":"web_component",
+    "js_doc_filters": "^(src)"
+  }
+}
