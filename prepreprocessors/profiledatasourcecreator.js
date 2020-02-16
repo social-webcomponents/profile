@@ -43,7 +43,7 @@ function createProfileDataSourcePrePrerocessor (lib, applib) {
         name: 'profile',
         type: 'jsdata',
         options: {
-          data: {}
+          data: null
         }
       }
     });
