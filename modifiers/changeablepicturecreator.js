@@ -9,8 +9,8 @@ function createChangeablePicture (lib, applib, templateslib, htmltemplateslib) {
 
   function ShouldUploadElement (id, options) {
     DivElement.call(this, id, options);
-    this.editShown = new lib.HookCollection();
-    this.shouldUpload = new lib.HookCollection();
+    this.editShown = this.createBufferableHookCollection(); //new lib.HookCollection();
+    this.shouldUpload = this.createBufferableHookCollection(); //new lib.HookCollection();
   }
   lib.inherit(ShouldUploadElement, DivElement);
   ShouldUploadElement.prototype.__cleanUp = function () {

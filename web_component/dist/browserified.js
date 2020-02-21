@@ -269,8 +269,8 @@ function createChangeablePicture (lib, applib, templateslib, htmltemplateslib) {
 
   function ShouldUploadElement (id, options) {
     DivElement.call(this, id, options);
-    this.editShown = new lib.HookCollection();
-    this.shouldUpload = new lib.HookCollection();
+    this.editShown = this.createBufferableHookCollection(); //new lib.HookCollection();
+    this.shouldUpload = this.createBufferableHookCollection(); //new lib.HookCollection();
   }
   lib.inherit(ShouldUploadElement, DivElement);
   ShouldUploadElement.prototype.__cleanUp = function () {
@@ -517,8 +517,8 @@ function createEditPicture (lib, applib, templateslib, htmltemplateslib) {
 
   function EditPictureElement (id, options) {
     DivElement.call(this, id, options);
-    this.OK = new lib.HookCollection();
-    this.Cancel = new lib.HookCollection();
+    this.OK = this.createBufferableHookCollection(); //new lib.HookCollection();
+    this.Cancel = this.createBufferableHookCollection(); //new lib.HookCollection();
     this.data = null;
   }
   lib.inherit(EditPictureElement, DivElement);

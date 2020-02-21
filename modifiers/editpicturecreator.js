@@ -8,8 +8,8 @@ function createEditPicture (lib, applib, templateslib, htmltemplateslib) {
 
   function EditPictureElement (id, options) {
     DivElement.call(this, id, options);
-    this.OK = new lib.HookCollection();
-    this.Cancel = new lib.HookCollection();
+    this.OK = this.createBufferableHookCollection(); //new lib.HookCollection();
+    this.Cancel = this.createBufferableHookCollection(); //new lib.HookCollection();
     this.data = null;
   }
   lib.inherit(EditPictureElement, DivElement);
