@@ -2,7 +2,7 @@ function profilizer (item) {
   return 'datasource.profile_'+item+':data';
 }
 
-function createProfileDataSourcePrePrerocessor (lib, applib) {
+function createProfileDataSourcePrePrerocessor (lib, applib, impossibleString) {
   'use strict';
 
   function profileUpdater (profflds) {
@@ -21,6 +21,10 @@ function createProfileDataSourcePrePrerocessor (lib, applib) {
     console.log('data', data);
     */
     for (i=0; i<profflds.length; i++) {
+      if (data[i] === profflds[i]+impossibleString) {
+        //console.log('no can do', profflds[i]);
+        return;
+      }
       profile[profflds[i]] = data[i];
     }
     ds.setData(profile);

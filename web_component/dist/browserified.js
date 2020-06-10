@@ -13,7 +13,7 @@
   require('./prepreprocessors')(lib, applib, templateslib, htmltemplateslib);
 })(ALLEX);
 
-},{"./modifiers":7,"./prepreprocessors":8}],2:[function(require,module,exports){
+},{"./modifiers":7,"./prepreprocessors":9}],2:[function(require,module,exports){
 function createChangeableElement (lib, applib, templateslib, htmltemplateslib) {
   'use strict';
 
@@ -636,28 +636,98 @@ module.exports = createEditPicture;
 function createModifiers (lib, applib, templateslib, htmltemplateslib) {
   'use strict';
 
+  require('./updatercreator')(lib, applib);
   require('./changeableelementcreator')(lib, applib, templateslib, htmltemplateslib);
   require('./changeableelementintegratorcreator')(lib, applib);
   require('./editpicturecreator')(lib, applib, templateslib, htmltemplateslib);
   require('./changeablepicturecreator')(lib, applib, templateslib, htmltemplateslib);
   require('./changeablepictureintegratorcreator')(lib, applib);
-  //require('./chatwidgetcreator')(lib, applib, templateslib, htmltemplateslib);
 }
 
 module.exports = createModifiers;
 
-},{"./changeableelementcreator":2,"./changeableelementintegratorcreator":3,"./changeablepicturecreator":4,"./changeablepictureintegratorcreator":5,"./editpicturecreator":6}],8:[function(require,module,exports){
+},{"./changeableelementcreator":2,"./changeableelementintegratorcreator":3,"./changeablepicturecreator":4,"./changeablepictureintegratorcreator":5,"./editpicturecreator":6,"./updatercreator":8}],8:[function(require,module,exports){
+function createUpdater (lib, applib) {
+  'use strict';
+
+  var BasicModifier = applib.BasicModifier;
+
+  function ProfileUpdaterModifier (options) {
+    BasicModifier.call(this, options);
+  }
+  lib.inherit(ProfileUpdaterModifier, BasicModifier);
+  ProfileUpdaterModifier.prototype.doProcess = function (name, options, links, logic, resources) {
+    var prefix, triggers;
+    if (!this.config) {
+      console.warn('No options for ProfileUpdater!');
+      return;
+    }
+    if (!this.config.triggers) {
+      console.warn('No triggers for ProfileUpdater!', this.config);
+      return;
+    }
+    prefix = this.config.prefix || '';
+    triggers = this.config.triggers;
+    if (lib.isArray(triggers)) {
+      triggers.forEach(this.processTrigger.bind(this, logic, prefix));
+      prefix = null;
+      logic = null;
+      return;
+    }
+    this.processTrigger(logic, triggers);
+  };
+  ProfileUpdaterModifier.prototype.processTrigger = function (logic, prefix, trigger) {
+    var propname;
+    if (!(trigger && trigger.name && trigger.property)) {
+      console.warn('No name and property properties in', trigger);
+      return;
+    }
+    propname = trigger.property;
+    logic.push({
+      triggers: prefix+trigger.name,
+      references: 'datasource.profile, .>updateProfile',
+      handler: function (profile, updproffunc, newdata) {
+        var profiledata;
+        if (!profile) {
+          return;
+        }
+        profiledata = profile.get('data');
+        if (!profiledata) {
+          return;
+        }
+        if (lib.isEqual(profiledata[propname], newdata)) {
+          return;
+        }
+        updproffunc([propname, newdata]);
+      }
+    });
+  };
+
+  ProfileUpdaterModifier.prototype.DEFAULT_CONFIG = function () {
+    return {};
+  };
+
+  applib.registerModifier('ProfileUpdater', ProfileUpdaterModifier);
+}
+module.exports = createUpdater;
+
+},{}],9:[function(require,module,exports){
 function createPrePreprocessors (lib, applib, templateslib, htmltemplateslib) {
   'use strict';
 
-  require('./initcreator')(lib, applib);
-  require('./profiledatasourcecreator')(lib, applib);
+  var impossibleString = '';
+  for (var i=0; i<32; i++) {
+    impossibleString+=(Date.now()+Math.random());
+  }
+
+  require('./initcreator')(lib, applib, impossibleString);
+  require('./profiledatasourcecreator')(lib, applib, impossibleString);
 }
 
 module.exports = createPrePreprocessors;
 
-},{"./initcreator":9,"./profiledatasourcecreator":10}],9:[function(require,module,exports){
-function createInitPrePreprocessor (lib, applib) {
+},{"./initcreator":10,"./profiledatasourcecreator":11}],10:[function(require,module,exports){
+function createInitPrePreprocessor (lib, applib, impossibleString) {
   'use strict';
   var BasicProcessor = applib.BasicProcessor;
 
@@ -713,6 +783,9 @@ function createInitPrePreprocessor (lib, applib) {
           path: pn,
           sink: '.'
         }
+      },
+      app_options: {
+        initial_value: profilefieldname+impossibleString
       }
     }
   }
@@ -721,12 +794,12 @@ function createInitPrePreprocessor (lib, applib) {
 }
 module.exports = createInitPrePreprocessor;
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 function profilizer (item) {
   return 'datasource.profile_'+item+':data';
 }
 
-function createProfileDataSourcePrePrerocessor (lib, applib) {
+function createProfileDataSourcePrePrerocessor (lib, applib, impossibleString) {
   'use strict';
 
   function profileUpdater (profflds) {
@@ -745,6 +818,10 @@ function createProfileDataSourcePrePrerocessor (lib, applib) {
     console.log('data', data);
     */
     for (i=0; i<profflds.length; i++) {
+      if (data[i] === profflds[i]+impossibleString) {
+        //console.log('no can do', profflds[i]);
+        return;
+      }
       profile[profflds[i]] = data[i];
     }
     ds.setData(profile);

@@ -1,4 +1,4 @@
-function createInitPrePreprocessor (lib, applib) {
+function createInitPrePreprocessor (lib, applib, impossibleString) {
   'use strict';
   var BasicProcessor = applib.BasicProcessor;
 
@@ -54,6 +54,9 @@ function createInitPrePreprocessor (lib, applib) {
           path: pn,
           sink: '.'
         }
+      },
+      app_options: {
+        initial_value: profilefieldname+impossibleString
       }
     }
   }
