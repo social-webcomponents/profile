@@ -15,7 +15,7 @@ function createChangeablePictureIntegrator (lib, applib) {
     });
     logic.push({
       triggers: 'element.'+this.config.changeablepicturecontainername+'!shouldUpload',
-      references: 'element.'+this.config.changeablepicturecontainername+',element.'+this.config.uploaderelementname,
+      references: 'element.'+this.config.changeablepicturecontainername+',datasource.'+this.config.uploadurldatasourcename,
       handler: function (pic, pictureUploadURL, file) {
         console.log('pictureUploadURL.upload?', pic, pictureUploadURL, file, bound_fields);
         var blob;
@@ -26,7 +26,7 @@ function createChangeablePictureIntegrator (lib, applib) {
         blob = srcToBlob(file.contents);
         blob.name = file.data.name;
         console.log('blob.size', blob.size);
-        lib.request(pictureUploadURL.url, {
+        lib.request(pictureUploadURL.get('data'), {
           method: 'POST',
           parameters: lib.extend({
             file: blob

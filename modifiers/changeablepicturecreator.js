@@ -76,6 +76,7 @@ function createChangeablePicture (lib, applib, templateslib, htmltemplateslib) {
   ChangeablePictureModifier.prototype.doProcess = function (name, options, links, logic, resources) {
     var formname = this.config.name,
       pictureeditorname = this.config.pictureeditorname || 'EditPicture',
+      target_on_parent = this.config.target_on_parent || '.modal-dialog',
       shupelements;
     options.elements = options.elements || [];
     shupelements = [{
@@ -95,7 +96,7 @@ function createChangeablePicture (lib, applib, templateslib, htmltemplateslib) {
     },{
       type: 'SocialEditPictureElement',
       name: pictureeditorname,
-      options: lib.extend({}, this.config.edit, { 
+      options: lib.extend({target_on_parent: target_on_parent}, this.config.edit, { 
       }),
       modifiers: [{
         name: 'SocialProfileEditPictureModifier',

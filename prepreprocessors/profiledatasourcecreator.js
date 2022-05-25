@@ -5,14 +5,21 @@ function profilizer (item) {
 function createProfileDataSourcePrePrerocessor (lib, applib, impossibleString) {
   'use strict';
 
-  function profileUpdater (profflds) {
-    var env, ds, data, profile, i;
-    env = arguments[1];
-    ds = env.dataSources ? env.dataSources.get('profile') : null;
+  function profileUpdater (profdsname, profflds) {
+    var env, data;
+    env = arguments[2];
+    data = Array.prototype.slice.call(arguments, 3);
+    env.dataSources.waitFor(profdsname).then(onProfileDS.bind(null, profflds, data));
+    profflds = null;
+    data = null;
+    //ds = env.dataSources ? env.dataSources.get('profile') : null;
+  }
+
+  function onProfileDS (profflds, data, ds) {
+    var profile, i;
     if (!ds) {
       return;
     }
-    data = Array.prototype.slice.call(arguments, 2);
     profile = {};
     /*
     console.log('profileUpdater!');
@@ -39,12 +46,13 @@ function createProfileDataSourcePrePrerocessor (lib, applib, impossibleString) {
   ProfileDataSourcePrePreprocessor.prototype.process = function (desc) {
     var _environmentname = this.config.environment;
     var _pflds = this.config.profilefields;
+    var _pfdsn = this.config.profiledatasourcename || 'profile';
     desc.preprocessors = desc.preprocessors || {};
     desc.preprocessors.DataSource = desc.preprocessors.DataSource || [];
     desc.preprocessors.DataSource.push({
       environment: _environmentname,
       entity: {
-        name: 'profile',
+        name: _pfdsn,
         type: 'jsdata',
         options: {
           data: null
@@ -58,9 +66,11 @@ function createProfileDataSourcePrePrerocessor (lib, applib, impossibleString) {
       desc.logic.push({
         triggers:tstr,
         references: 'environment.'+_environmentname,
-        handler: profileUpdater.bind(null, _pflds)
+        handler: profileUpdater.bind(null, _pfdsn, _pflds)
       });
     }
+    _pfdsn = null;
+    _pflds = null;
   };
 
   applib.registerPrePreprocessor('ProfileDataSource', ProfileDataSourcePrePreprocessor);

@@ -13,251 +13,7 @@
   require('./prepreprocessors')(lib, applib, templateslib, htmltemplateslib);
 })(ALLEX);
 
-},{"./modifiers":7,"./prepreprocessors":9}],2:[function(require,module,exports){
-function createChangeableElement (lib, applib, templateslib, htmltemplateslib) {
-  'use strict';
-
-  var BasicModifier = applib.BasicModifier,
-    AngularFormLogic = applib.getElementType('AngularFormLogic'),
-    o = templateslib.override,
-    m = htmltemplateslib;
-
-
-  function createMarkup (options) {
-    return o(m.form
-    );
-  }
-
-  function createElementInfo(options){
-    var ret;
-    /* TODO
-    if (!!options.valueMap){
-      ret = options.valueMap['{{_ctrl.data.' + options.profileProperty + '}}'];
-    }else{
-      ret = '{{_ctrl.data.' + options.profileProperty + '}}';
-    }
-    */
-    ret = '<div class="profileElementInfo">{{_ctrl.data.' + options.profileProperty + '}}</div>';
-    return ret;
-  }
-
-  function createElementDescription(options){
-    console.log('da vidimo options kad se radi createElementDescription',options);
-    var ret;
-    if (!options.description){
-      ret = '';
-    }else{
-      ret = '<div class="profileElementDescription">' + options.description + '</div>';
-    }
-    return ret;
-  }
-
-  function createInputField(options){
-    var ret, optionArry = [];
-    switch(options.inputType){
-      case 'select':
-        if (lib.isArray(options.selectOptions)){
-          for (var i=0; i<options.selectOptions.length; i++){
-            var option = options.selectOptions[i];
-            optionArry.push(
-              o(m.option,
-                'CLASS', 'profile-info-option',
-                'ATTRS', 'value="' + option + '" ng-selected= "{{_ctrl.data.' + options.profileProperty + ' == ' + option+ '}}"',
-                'CONTENTS', options.valueMap[option]+' '+'{{_ctrl.data.' + options.profileProperty+'}}' //TODO uppercase first letter
-              )
-            );
-          }
-        }
-        ret = o(m.select,
-          'CLASS', 'form-control hers-profile-form-control',
-          'NAME', options.profileProperty,
-          'CONTENTS', optionArry
-        );
-        break;
-      case 'text':
-      default:
-        ret = o(m.textinput,
-          'CLASS', 'form-control hers-profile-form-control',
-          'NAME', options.profileProperty,
-          'ATTRS', 'placeholder="{{_ctrl.data.' + options.profileProperty + '}}"'
-        );
-        break;
-    }
-    return ret;
-  }
-
-  function ProfileInfoElement (id, options) {
-    var profileProperty = options.profileProperty;
-    AngularFormLogic.call(this, id, options);
-    ProfileInfoElement.prototype['set_' + profileProperty] = this.genericSetter.bind(this, options, profileProperty);
-    ProfileInfoElement.prototype['get_' + profileProperty] = this.genericGetter.bind(this, profileProperty);
-    //this.shouldUpload = new lib.HookCollection(); //submit event will do this job
-  }
-  lib.inherit(ProfileInfoElement, AngularFormLogic);
-  ProfileInfoElement.prototype.__cleanUp = function () {
-    AngularFormLogic.prototype.__cleanUp.call(this);
-  };
-  ProfileInfoElement.prototype.set_data = function (data) {
-    return AngularFormLogic.prototype.set_data.call(this, data);
-  };
-  ProfileInfoElement.prototype.genericSetter = function (options, pp, value) {
-    this.updateHashField(pp, value);
-  };
-  ProfileInfoElement.prototype.genericGetter = function (pp) {
-    return this.get('data')[pp];
-  };
-  applib.registerElementType('ProfileInfoElement', ProfileInfoElement);
-
-  function ChangeableElementModifier (options) {
-    BasicModifier.call(this, options);
-  }
-  lib.inherit(ChangeableElementModifier, BasicModifier);
-
-  ChangeableElementModifier.prototype.doProcess = function (name, options, links, logic, resources) {
-    var formname = this.config.name;
-    if (!this.config || !this.config.profileProperty){
-      throw new lib.Error('NO_PROFILE_PROPERTY_SPECIFIED', 'Profile property must be specified for ChangableElement');
-    }
-    var profileProperty = this.config.profileProperty;
-    var valueMap = this.config.valueMap;
-    options.elements = options.elements || [];
-    options.elements.push({
-      type: 'ProfileInfoElement',
-      name: formname,
-      options: {
-        actual: this.config.actual,
-        self_selector: '.',
-        default_markup: createMarkup(this.config),
-        target_on_parent: this.config.target_on_parent,
-        onInitialized: function (me) {
-          me.set('data', {disabled: true});
-        },
-        profileProperty: profileProperty,
-        valueMap: valueMap,
-        elements: [
-          {
-            name: 'changeableelementchange',
-            type: 'ClickableElement',
-            options: lib.extend({
-              actual: true,
-              clickable: {
-                type: 'a',
-                text: 'Change'
-              }
-            }, this.config.change, {
-              self_selector: '.'
-            })
-          },
-          {
-            name: 'changeableelementdisplay',
-            type: 'DivElement',
-            options: lib.extend({
-              actual: true,
-              div: {
-                text: o(m.div,
-                  'CONTENTS', [
-                    createElementInfo(this.config),
-                    createElementDescription(this.config)
-                  ]
-                )
-              }
-            }, this.config.display, {
-              self_selector: '.'
-            })
-          },
-          {
-            name: 'changeableelementedit',
-            type: 'DivElement',
-            options: lib.extend({
-              actual: false,
-              div: {
-                class: 'form-row hers-profile-form-row',
-                text: [
-                  createInputField(this.config),
-                  o(m.button,
-                    'CLASS', 'changeableelementcontainersubmit btn btn-info',
-                    'ATTRS', 'type="submit"',
-                    'CONTENTS', 'Update'
-                  )
-                ]
-              }
-            }, this.config.edit, {
-              self_selector: '.',
-              /*
-              elements: [{
-                type: 'ClickableElement',
-                name: 'Submit',
-                options: lib.extend({
-                },this.config.editsubmit,{
-                }
-              }]
-              */
-            })
-          }
-        ]
-      }
-    });
-    /*
-    logic.push({
-      triggers: formname+'.changeableelementchange.$element!click',
-      references: formname+'.changeableelementdisplay, '+formname+'.changeableelementedit',
-      handler: function(infoEl, editEl){
-        var infoActual, editActual;
-        infoActual = infoEl.get('actual');
-        editActual = editEl.get('actual');
-        infoEl.set('actual', !infoActual);
-        editEl.set('actual', !editActual);
-      }
-    });
-    */
-  };
-  ChangeableElementModifier.prototype.DEFAULT_CONFIG = function () {
-    return {};
-  };
-
-  applib.registerModifier('SocialProfileChangeableElement', ChangeableElementModifier);
-}
-
-module.exports = createChangeableElement;
-
-},{}],3:[function(require,module,exports){
-function createChangeableElementIntegrator (lib, applib) {
-  'use strict';
-
-  var BasicModifier = applib.BasicModifier;
-  
-  function ChangeableElementIntegrator (options) {
-    BasicModifier.call(this, options);
-    if (!options.profileProperty){
-      throw new lib.Error('NO_PROFILE_PROPERTY_SPECIFIED', 'Profile property must be specified for ChangableElementIntegrator');
-    }
-  }
-  lib.inherit(ChangeableElementIntegrator, BasicModifier);
-  ChangeableElementIntegrator.prototype.doProcess = function (name, options, links, logic, resources) {
-    var profileProperty = this.config.profileProperty, ph;
-    ph = {
-      source: 'datasource.'+this.config.elementdatasourcename+':data',
-      target: 'element.'+this.config.changeableelementcontainername+':' + profileProperty
-    };
-    links.push(ph);
-    logic.push({
-      triggers: 'element.'+this.config.changeableelementcontainername+'!submit',
-      references: '.>updateProfile',
-      handler: function (upfunc, submitdata) {
-        upfunc([profileProperty, submitdata[profileProperty]]);
-      }
-    });
-  };
-  ChangeableElementIntegrator.prototype.DEFAULT_CONFIG = function () {
-    return {};
-  }
-
-  applib.registerModifier('SocialProfileChangeableElementIntegrator', ChangeableElementIntegrator);
-}
-
-module.exports = createChangeableElementIntegrator;
-
-},{}],4:[function(require,module,exports){
+},{"./modifiers":5,"./prepreprocessors":7}],2:[function(require,module,exports){
 function createChangeablePicture (lib, applib, templateslib, htmltemplateslib) {
   'use strict';
 
@@ -336,6 +92,7 @@ function createChangeablePicture (lib, applib, templateslib, htmltemplateslib) {
   ChangeablePictureModifier.prototype.doProcess = function (name, options, links, logic, resources) {
     var formname = this.config.name,
       pictureeditorname = this.config.pictureeditorname || 'EditPicture',
+      target_on_parent = this.config.target_on_parent || '.modal-dialog',
       shupelements;
     options.elements = options.elements || [];
     shupelements = [{
@@ -355,7 +112,7 @@ function createChangeablePicture (lib, applib, templateslib, htmltemplateslib) {
     },{
       type: 'SocialEditPictureElement',
       name: pictureeditorname,
-      options: lib.extend({}, this.config.edit, { 
+      options: lib.extend({target_on_parent: target_on_parent}, this.config.edit, { 
       }),
       modifiers: [{
         name: 'SocialProfileEditPictureModifier',
@@ -419,7 +176,7 @@ function createChangeablePicture (lib, applib, templateslib, htmltemplateslib) {
 
 module.exports = createChangeablePicture;
 
-},{}],5:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 function createChangeablePictureIntegrator (lib, applib) {
   'use strict';
 
@@ -437,7 +194,7 @@ function createChangeablePictureIntegrator (lib, applib) {
     });
     logic.push({
       triggers: 'element.'+this.config.changeablepicturecontainername+'!shouldUpload',
-      references: 'element.'+this.config.changeablepicturecontainername+',element.'+this.config.uploaderelementname,
+      references: 'element.'+this.config.changeablepicturecontainername+',datasource.'+this.config.uploadurldatasourcename,
       handler: function (pic, pictureUploadURL, file) {
         console.log('pictureUploadURL.upload?', pic, pictureUploadURL, file, bound_fields);
         var blob;
@@ -448,7 +205,7 @@ function createChangeablePictureIntegrator (lib, applib) {
         blob = srcToBlob(file.contents);
         blob.name = file.data.name;
         console.log('blob.size', blob.size);
-        lib.request(pictureUploadURL.url, {
+        lib.request(pictureUploadURL.get('data'), {
           method: 'POST',
           parameters: lib.extend({
             file: blob
@@ -506,7 +263,7 @@ function createChangeablePictureIntegrator (lib, applib) {
 
 module.exports = createChangeablePictureIntegrator;
 
-},{}],6:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 function createEditPicture (lib, applib, templateslib, htmltemplateslib) {
   'use strict';
 
@@ -632,13 +389,13 @@ function createEditPicture (lib, applib, templateslib, htmltemplateslib) {
 }
 module.exports = createEditPicture;
 
-},{}],7:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 function createModifiers (lib, applib, templateslib, htmltemplateslib) {
   'use strict';
 
   require('./updatercreator')(lib, applib);
-  require('./changeableelementcreator')(lib, applib, templateslib, htmltemplateslib);
-  require('./changeableelementintegratorcreator')(lib, applib);
+  //require('./changeableelementcreator')(lib, applib, templateslib, htmltemplateslib);
+  //require('./changeableelementintegratorcreator')(lib, applib);
   require('./editpicturecreator')(lib, applib, templateslib, htmltemplateslib);
   require('./changeablepicturecreator')(lib, applib, templateslib, htmltemplateslib);
   require('./changeablepictureintegratorcreator')(lib, applib);
@@ -646,7 +403,7 @@ function createModifiers (lib, applib, templateslib, htmltemplateslib) {
 
 module.exports = createModifiers;
 
-},{"./changeableelementcreator":2,"./changeableelementintegratorcreator":3,"./changeablepicturecreator":4,"./changeablepictureintegratorcreator":5,"./editpicturecreator":6,"./updatercreator":8}],8:[function(require,module,exports){
+},{"./changeablepicturecreator":2,"./changeablepictureintegratorcreator":3,"./editpicturecreator":4,"./updatercreator":6}],6:[function(require,module,exports){
 function createUpdater (lib, applib) {
   'use strict';
 
@@ -711,7 +468,7 @@ function createUpdater (lib, applib) {
 }
 module.exports = createUpdater;
 
-},{}],9:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 function createPrePreprocessors (lib, applib, templateslib, htmltemplateslib) {
   'use strict';
 
@@ -726,7 +483,7 @@ function createPrePreprocessors (lib, applib, templateslib, htmltemplateslib) {
 
 module.exports = createPrePreprocessors;
 
-},{"./initcreator":10,"./profiledatasourcecreator":11}],10:[function(require,module,exports){
+},{"./initcreator":8,"./profiledatasourcecreator":9}],8:[function(require,module,exports){
 function createInitPrePreprocessor (lib, applib, impossibleString) {
   'use strict';
   var BasicProcessor = applib.BasicProcessor;
@@ -794,7 +551,7 @@ function createInitPrePreprocessor (lib, applib, impossibleString) {
 }
 module.exports = createInitPrePreprocessor;
 
-},{}],11:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 function profilizer (item) {
   return 'datasource.profile_'+item+':data';
 }
@@ -802,14 +559,21 @@ function profilizer (item) {
 function createProfileDataSourcePrePrerocessor (lib, applib, impossibleString) {
   'use strict';
 
-  function profileUpdater (profflds) {
-    var env, ds, data, profile, i;
-    env = arguments[1];
-    ds = env.dataSources ? env.dataSources.get('profile') : null;
+  function profileUpdater (profdsname, profflds) {
+    var env, data;
+    env = arguments[2];
+    data = Array.prototype.slice.call(arguments, 3);
+    env.dataSources.waitFor(profdsname).then(onProfileDS.bind(null, profflds, data));
+    profflds = null;
+    data = null;
+    //ds = env.dataSources ? env.dataSources.get('profile') : null;
+  }
+
+  function onProfileDS (profflds, data, ds) {
+    var profile, i;
     if (!ds) {
       return;
     }
-    data = Array.prototype.slice.call(arguments, 2);
     profile = {};
     /*
     console.log('profileUpdater!');
@@ -836,12 +600,13 @@ function createProfileDataSourcePrePrerocessor (lib, applib, impossibleString) {
   ProfileDataSourcePrePreprocessor.prototype.process = function (desc) {
     var _environmentname = this.config.environment;
     var _pflds = this.config.profilefields;
+    var _pfdsn = this.config.profiledatasourcename || 'profile';
     desc.preprocessors = desc.preprocessors || {};
     desc.preprocessors.DataSource = desc.preprocessors.DataSource || [];
     desc.preprocessors.DataSource.push({
       environment: _environmentname,
       entity: {
-        name: 'profile',
+        name: _pfdsn,
         type: 'jsdata',
         options: {
           data: null
@@ -855,9 +620,11 @@ function createProfileDataSourcePrePrerocessor (lib, applib, impossibleString) {
       desc.logic.push({
         triggers:tstr,
         references: 'environment.'+_environmentname,
-        handler: profileUpdater.bind(null, _pflds)
+        handler: profileUpdater.bind(null, _pfdsn, _pflds)
       });
     }
+    _pfdsn = null;
+    _pflds = null;
   };
 
   applib.registerPrePreprocessor('ProfileDataSource', ProfileDataSourcePrePreprocessor);

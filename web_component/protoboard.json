@@ -17,7 +17,6 @@
       "allex:htmltemplates:lib",
       "allex:jqueryelements:lib",
       "allex:imagemodifier:webcomponent",
-      "allex:angular1upload:webcomponent",
       "allex:geolocation:webcomponent"
     ],
     "css": [
