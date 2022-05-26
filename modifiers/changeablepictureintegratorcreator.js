@@ -34,7 +34,6 @@ function createChangeablePictureIntegrator (lib, applib) {
           onComplete: console.log.bind(console, 'request'),
           onError: console.error.bind(console, 'request')
         });
-        //lib.request(uploader.get('data'), );
       }
     });
   };
