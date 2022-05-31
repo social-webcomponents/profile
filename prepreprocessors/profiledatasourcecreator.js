@@ -37,6 +37,19 @@ function createProfileDataSourcePrePrerocessor (lib, applib, impossibleString) {
     ds.setData(profile);
   }
 
+  function profileVsEnvironmentStateHandler (profflds, profds, state) {
+    var profile, i;
+    if (state != 'loggedout') {
+      return;
+    }
+    profile = {};
+    for (i=0; i<profflds.length; i++) {
+      profile[profflds[i]] = ' ';
+    }
+    profds.set('data', profile);
+    profds.set('data', null);
+  }
+
   var BasicProcessor = applib.BasicProcessor;
 
   function ProfileDataSourcePrePreprocessor () {
@@ -67,6 +80,10 @@ function createProfileDataSourcePrePrerocessor (lib, applib, impossibleString) {
         triggers:tstr,
         references: 'environment.'+_environmentname,
         handler: profileUpdater.bind(null, _pfdsn, _pflds)
+      },{
+        triggers: 'environment.'+_environmentname+':state',
+        references: 'datasource.'+_pfdsn,
+        handler: profileVsEnvironmentStateHandler.bind(null, _pflds)
       });
     }
     _pfdsn = null;
